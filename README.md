@@ -1,85 +1,51 @@
 # wa-moodle
 
-Postgres-backed WhatsApp session service built with Baileys.
+Moodle WhatsApp notification plugin with direct Evolution API integration.
 
-## What it does
+## What stays in this repo
 
-- Persists Baileys auth creds and signal keys in PostgreSQL instead of local files.
-- Stores sent/received messages so `getMessage()` works for retries.
-- Handles QR login, pairing-code login, reconnects, and logout flows.
-- Exposes REST endpoints for connection and messaging operations.
+- `moodle/message/output/wamoodle`
 
-## Setup
+This plugin:
 
-1. Copy `.env.example` to `.env`.
-2. Set `NEXT_DB_URL` to a working PostgreSQL connection string.
-3. Optionally set `BAILEYS_AUTH_ENCRYPTION_KEY` to encrypt stored auth payloads.
-4. Install dependencies with `npm install`.
-5. Start the server with `npm run dev` or `npm start`.
+- adds WhatsApp as a Moodle message output
+- stores queue and sender-session state in Moodle tables
+- sends notifications through Evolution API directly
+- uses Moodle adhoc tasks for retries and background delivery
+- provides admin tools for QR login, pairing code login, sender status, and test sends
 
-## API
+## Install
 
-### `POST /api/sessions/:sessionId/connect`
+1. Copy `moodle/message/output/wamoodle` into your Moodle codebase at:
+   `message/output/wamoodle`
+2. Run Moodle upgrade.
+3. Purge caches.
 
-Start or resume a session.
+## Configure
 
-```json
-{
-  "mode": "qr",
-  "syncFullHistory": false
-}
-```
+Open:
 
-For pairing login:
+- `http://localhost/admin/settings.php?section=messagesettingwamoodle`
 
-```json
-{
-  "mode": "pairing",
-  "phoneNumber": "919999999999"
-}
-```
+Set:
 
-### `POST /api/sessions/:sessionId/pairing-code`
+- Evolution API base URL
+- Evolution API key
+- Sender session ID
+- Default country code
+- Primary Moodle mobile field
 
-Generate a pairing code.
+Use the status page to manage the sender session:
 
-```json
-{
-  "phoneNumber": "919999999999"
-}
-```
+- `http://localhost/message/output/wamoodle/status.php`
 
-### `GET /api/sessions/:sessionId/status`
+## Sender session flow
 
-Get the current persisted session state.
+From the plugin status page you can:
 
-### `GET /api/sessions/:sessionId/qr`
+- refresh sender session state
+- start QR login
+- request a pairing code with a phone number
+- send a test message
 
-Get the raw QR string plus a data URL for frontend rendering.
-
-### `POST /api/sessions/:sessionId/messages/text`
-
-Send a plain text message.
-
-```json
-{
-  "to": "919999999999",
-  "text": "Hello from Baileys"
-}
-```
-
-The `to` value also accepts full JIDs like `1234567890@g.us`.
-
-### `POST /api/sessions/:sessionId/disconnect`
-
-Disconnect while keeping stored auth for later reconnects.
-
-### `POST /api/sessions/:sessionId/logout`
-
-Log out and delete stored auth material for the session.
-
-## Notes
-
-- This service creates its own tables on startup.
-- Existing sessions with stored creds are automatically restored on boot.
-- Group metadata is cached in memory to avoid unnecessary fetches during sends.
+The plugin stores sender session state in Moodle and sends queued notifications through the configured Evolution sender session.

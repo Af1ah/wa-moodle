@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="message/output/wamoodle/db" VERSION="2026033004" COMMENT="XMLDB file for message_wamoodle"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
+  <TABLES>
+    <TABLE NAME="message_wamoodle_queue" COMMENT="Queued WhatsApp notifications">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="messageid" TYPE="char" LENGTH="100" NOTNULL="false"/>
+        <FIELD NAME="notificationtype" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT=""/>
+        <FIELD NAME="recipientnumber" TYPE="char" LENGTH="30" NOTNULL="false"/>
+        <FIELD NAME="payloadjson" TYPE="text" NOTNULL="true"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending"/>
+        <FIELD NAME="attempts" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="lastresponse" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="nextruntime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="userid_idx" UNIQUE="false" FIELDS="userid"/>
+        <INDEX NAME="statusruntime_idx" UNIQUE="false" FIELDS="status,nextruntime"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="message_wamoodle_log" COMMENT="Delivery logs for queued WhatsApp notifications">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="queueid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending"/>
+        <FIELD NAME="requestbody" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="responsebody" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="errorcode" TYPE="char" LENGTH="80" NOTNULL="false"/>
+        <FIELD NAME="errormessage" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="queueid_idx" UNIQUE="false" FIELDS="queueid"/>
+        <INDEX NAME="userid_idx" UNIQUE="false" FIELDS="userid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="message_wamoodle_session" COMMENT="Stored sender session state for Evolution API">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="instancename" TYPE="char" LENGTH="100" NOTNULL="true" DEFAULT=""/>
+        <FIELD NAME="connectionstatus" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="missing"/>
+        <FIELD NAME="ownerjid" TYPE="char" LENGTH="100" NOTNULL="false"/>
+        <FIELD NAME="profilename" TYPE="char" LENGTH="255" NOTNULL="false"/>
+        <FIELD NAME="phonenumber" TYPE="char" LENGTH="30" NOTNULL="false"/>
+        <FIELD NAME="qrcode" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="qrbase64" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="pairingcode" TYPE="char" LENGTH="100" NOTNULL="false"/>
+        <FIELD NAME="lasterror" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="instancename_uix" UNIQUE="true" FIELDS="instancename"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>
