@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "nodejs-best-practices": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "d5ea3be9fc836cd97853a9842a23b9ee386f4f53bdaeadf4694adf127bb2e865"
+    }
+  }
+}

@@ -5,17 +5,32 @@ defined('MOODLE_INTERNAL') || die();
 
 final class config {
     public const PROFILE_FIELD_SHORTNAME = 'wamoodlewhatsapp';
+    public const DEFAULT_PLUGIN_CODE = 'message_wamoodle';
 
     public static function is_enabled(): bool {
         return (bool)get_config('message_wamoodle', 'enable');
     }
 
-    public static function get_evolution_url(): string {
-        return rtrim((string)get_config('message_wamoodle', 'evolutionurl'), '/');
+    public static function get_backend_url(): string {
+        return 'https://plugbolt.vercel.app';
     }
 
-    public static function get_evolution_api_key(): string {
-        return (string)get_config('message_wamoodle', 'evolutionapikey');
+    public static function get_plugin_code(): string {
+        return self::DEFAULT_PLUGIN_CODE;
+    }
+
+    private static function get_parsed_key(int $index): string {
+        $key = trim((string)get_config('message_wamoodle', 'verificationkey'));
+        $parts = explode('|', $key);
+        return isset($parts[$index]) ? trim($parts[$index]) : '';
+    }
+
+    public static function get_client_key(): string {
+        return self::get_parsed_key(0);
+    }
+
+    public static function get_plugin_secret(): string {
+        return self::get_parsed_key(1);
     }
 
     public static function get_sender_session_id(): string {
@@ -33,8 +48,9 @@ final class config {
 
     public static function is_configured(): bool {
         return self::is_enabled()
-            && self::get_evolution_url() !== ''
-            && self::get_evolution_api_key() !== ''
-            && self::get_sender_session_id() !== '';
+            && self::get_backend_url() !== ''
+            && self::get_client_key() !== ''
+            && self::get_plugin_secret() !== ''
+            && self::get_plugin_code() !== '';
     }
 }

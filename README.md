@@ -1,18 +1,28 @@
 # wa-moodle
 
-Moodle WhatsApp notification plugin with direct Evolution API integration.
+Moodle WhatsApp notification plugin plus a shared secure backend broker.
 
 ## What stays in this repo
 
+- `backend`
 - `moodle/message/output/wamoodle`
 
-This plugin:
+The Moodle plugin:
 
 - adds WhatsApp as a Moodle message output
 - stores queue and sender-session state in Moodle tables
-- sends notifications through Evolution API directly
+- sends notifications through the shared backend broker
 - uses Moodle adhoc tasks for retries and background delivery
-- provides admin tools for QR login, pairing code login, sender status, and test sends
+- keeps local queue and retry logic
+- shows broker and sender status without exposing provider controls
+
+The backend:
+
+- manages clients, sites, entitlements, secrets, expiries, and audit logs
+- verifies plugin licenses with signed requests
+- brokers Evolution status, groups, and message sends
+
+Developer-facing integration notes live at `backend/DEVELOPER_NOTES.md`.
 
 ## Install
 
@@ -29,23 +39,16 @@ Open:
 
 Set:
 
-- Evolution API base URL
-- Evolution API key
+- Broker backend base URL
+- Plugin code
+- Client key
+- Plugin secret
 - Sender session ID
 - Default country code
 - Primary Moodle mobile field
 
-Use the status page to manage the sender session:
+Use the status page to inspect license and sender state:
 
 - `http://localhost/message/output/wamoodle/status.php`
 
-## Sender session flow
-
-From the plugin status page you can:
-
-- refresh sender session state
-- start QR login
-- request a pairing code with a phone number
-- send a test message
-
-The plugin stores sender session state in Moodle and sends queued notifications through the configured Evolution sender session.
+QR login, pairing, provider credentials, client provisioning, and expiry control are handled from the shared backend dashboard.

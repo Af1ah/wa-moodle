@@ -8,17 +8,10 @@ if ($ADMIN->fulltree) {
         get_string('enable_desc', 'message_wamoodle'),
         0
     ));
-    $settings->add(new admin_setting_configtext(
-        'message_wamoodle/evolutionurl',
-        get_string('evolutionurl', 'message_wamoodle'),
-        get_string('evolutionurl_desc', 'message_wamoodle'),
-        '',
-        PARAM_URL
-    ));
     $settings->add(new admin_setting_configpasswordunmask(
-        'message_wamoodle/evolutionapikey',
-        get_string('evolutionapikey', 'message_wamoodle'),
-        get_string('evolutionapikey_desc', 'message_wamoodle'),
+        'message_wamoodle/verificationkey',
+        get_string('verificationkey', 'message_wamoodle'),
+        get_string('verificationkey_desc', 'message_wamoodle'),
         ''
     ));
     $settings->add(new admin_setting_configtext(

@@ -44,7 +44,7 @@ final class process_notification_task extends \core\task\adhoc_task {
 
             $message = message_formatter::from_event((object)$payload);
             $text = message_formatter::as_whatsapp_text($message);
-            $response = (new sender_session_service())->send_text($recipientnumber, $text);
+            $response = (new sender_session_service())->send_text($recipientnumber, $text, 'queue-' . (int)$item->id);
             $queue->mark_sent((int)$item->id, $recipientnumber, $response);
             $queue->add_log((int)$item->id, $userid, 'sent', json_encode([
                 'recipient' => $recipientnumber,

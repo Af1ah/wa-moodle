@@ -73,5 +73,23 @@ function xmldb_message_wamoodle_upgrade(int $oldversion): bool {
         upgrade_plugin_savepoint(true, 2026033005, 'message', 'wamoodle');
     }
 
+    if ($oldversion < 2026040301) {
+        $table = new xmldb_table('message_wamoodle_course_groups');
+        if (!$dbman->table_exists($table)) {
+            $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+            $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('groupjid', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, '');
+            $table->add_field('groupname', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+            $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+            $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+            $table->add_index('courseid_uix', XMLDB_INDEX_UNIQUE, ['courseid']);
+
+            $dbman->create_table($table);
+        }
+        upgrade_plugin_savepoint(true, 2026040301, 'message', 'wamoodle');
+    }
+
     return true;
 }
