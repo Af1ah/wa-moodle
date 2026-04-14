@@ -8,10 +8,23 @@ if ($ADMIN->fulltree) {
         get_string('enable_desc', 'message_wamoodle'),
         0
     ));
+    $settings->add(new admin_setting_configtext(
+        'message_wamoodle/plugbolt_base_url',
+        get_string('plugbolt_base_url', 'message_wamoodle'),
+        get_string('plugbolt_base_url_desc', 'message_wamoodle'),
+        'https://plugbolt.vercel.app',
+        PARAM_URL
+    ));
     $settings->add(new admin_setting_configpasswordunmask(
-        'message_wamoodle/verificationkey',
-        get_string('verificationkey', 'message_wamoodle'),
-        get_string('verificationkey_desc', 'message_wamoodle'),
+        'message_wamoodle/plugbolt_client_key',
+        get_string('plugbolt_client_key', 'message_wamoodle'),
+        get_string('plugbolt_client_key_desc', 'message_wamoodle'),
+        ''
+    ));
+    $settings->add(new admin_setting_configpasswordunmask(
+        'message_wamoodle/plugbolt_plugin_secret',
+        get_string('plugbolt_plugin_secret', 'message_wamoodle'),
+        get_string('plugbolt_plugin_secret_desc', 'message_wamoodle'),
         ''
     ));
     $settings->add(new admin_setting_configtext(

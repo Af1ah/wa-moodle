@@ -10,9 +10,9 @@ final class broker_client {
         global $CFG;
 
         $body = $payload !== null ? json_encode($payload) : '{}';
-        $timestamp = gmdate('c');
+        $timestamp = gmdate('Y-m-d\TH:i:s.v\Z');
         $nonce = bin2hex(random_bytes(16));
-        $signature = hash_hmac('sha256', implode("\n", [
+        $signature = hash_hmac('sha256', implode('|', [
             strtoupper($method),
             $path,
             $timestamp,
@@ -47,6 +47,10 @@ final class broker_client {
         $decoded = json_decode($response, true);
         $data = is_array($decoded) ? $decoded : [];
 
+        if ($httpcode === 429) {
+            throw new \moodle_exception('error:ratelimit', 'message_wamoodle', '', null, 'Rate limit exceeded — retry after 60 seconds');
+        }
+
         if ($httpcode < 200 || $httpcode >= 300) {
             $errordetails = $data['message'] ?? $data['error'] ?? "HTTP $httpcode";
             throw new \moodle_exception('error:backend', 'message_wamoodle', '', null, is_string($errordetails) ? $errordetails : json_encode($errordetails));
@@ -57,7 +61,6 @@ final class broker_client {
 
     public function verify_license(): array {
         return $this->request('POST', '/api/licenses/verify', [
-            'pluginCode' => config::get_plugin_code(),
             'siteUrl' => $GLOBALS['CFG']->wwwroot,
         ]);
     }
