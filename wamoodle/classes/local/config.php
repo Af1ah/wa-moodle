@@ -12,20 +12,25 @@ final class config {
     }
 
     public static function get_backend_url(): string {
-        $url = trim((string)get_config('message_wamoodle', 'plugbolt_base_url'));
-        return $url !== '' ? $url : 'https://plugbolt.vercel.app';
+        return 'https://plugbolt.vercel.app';
     }
 
     public static function get_plugin_code(): string {
         return self::DEFAULT_PLUGIN_CODE;
     }
 
+    public static function get_api_key(): string {
+        return trim((string)get_config('message_wamoodle', 'plugbolt_api_key'));
+    }
+
     public static function get_client_key(): string {
-        return trim((string)get_config('message_wamoodle', 'plugbolt_client_key'));
+        $parts = explode('|', self::get_api_key(), 2);
+        return $parts[0] ?? '';
     }
 
     public static function get_plugin_secret(): string {
-        return trim((string)get_config('message_wamoodle', 'plugbolt_plugin_secret'));
+        $parts = explode('|', self::get_api_key(), 2);
+        return $parts[1] ?? '';
     }
 
     public static function get_sender_session_id(): string {
@@ -42,8 +47,9 @@ final class config {
     }
 
     public static function is_configured(): bool {
+        $key = self::get_api_key();
         return self::is_enabled()
-            && self::get_backend_url() !== ''
+            && str_contains($key, '|')
             && self::get_client_key() !== ''
             && self::get_plugin_secret() !== '';
     }
