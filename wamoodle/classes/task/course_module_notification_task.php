@@ -3,120 +3,75 @@ namespace message_wamoodle\task;
 
 defined('MOODLE_INTERNAL') || die();
 
+use message_wamoodle\local\group_message_formatter;
+use message_wamoodle\local\group_notification_service;
 use message_wamoodle\local\sender_session_service;
 
-/**
- * Task to send WhatsApp notifications when a new course module (Assignment, Quiz, etc.) is created.
- */
 class course_module_notification_task extends \core\task\adhoc_task {
     public function get_name(): string {
-        return get_string('whatsappconnect', 'message_wamoodle') . ' - Module Notification';
+        return get_string('task:coursegroupnotification', 'message_wamoodle');
     }
 
     public function execute(): void {
-        global $DB;
-        $data = (array)$this->get_custom_data();
-        $cmid = $data['cmid'];
-        $courseid = $data['courseid'];
-        $groupjid = $data['groupjid'];
-        $modname = $data['modname'];
-
-        // 1. Fetch Course Module and Course.
-        $cm = get_coursemodule_from_id($modname, $cmid, 0, false, IGNORE_MISSING);
-        if (!$cm) {
+        $data = (object)$this->get_custom_data();
+        if (empty($data->cmid) || empty($data->courseid) || empty($data->modname) || empty($data->type)) {
             return;
         }
 
-        $course = $DB->get_record('course', ['id' => $courseid]);
-        if (!$course) {
+        $service = new group_notification_service();
+        $group = $service->get_connected_group((int)$data->courseid);
+        if (!$group) {
             return;
         }
 
-        // 2. Fetch specific module data and determine common fields.
-        $title = '';
-        $description = '';
-        $deadline_ts = 0;
-        $view_path = '';
-        $icon = '📝';
-
-        if ($modname === 'assign') {
-            $record = $DB->get_record('assign', ['id' => $cm->instance]);
-            if ($record) {
-                $title = $record->name;
-                $description = $record->intro;
-                $deadline_ts = $record->duedate;
-                $view_path = '/mod/assign/view.php';
-                $icon = '📝';
-            }
-        } else if ($modname === 'quiz') {
-            $record = $DB->get_record('quiz', ['id' => $cm->instance]);
-            if ($record) {
-                $title = $record->name;
-                $description = $record->intro;
-                $deadline_ts = $record->timeclose;
-                $view_path = '/mod/quiz/view.php';
-                $icon = '🧠';
-            }
-        }
-
-        if (empty($title)) {
+        $snapshot = $service->get_module_snapshot((int)$data->cmid, (string)$data->modname);
+        if (!$snapshot || (int)$snapshot->courseid !== (int)$data->courseid) {
             return;
         }
 
-        // 3. Format the message.
-        $url = new \moodle_url($view_path, ['id' => $cmid]);
-        $urlstring = $url->out(false);
-
-        $clean_desc = html_entity_decode(strip_tags($description), ENT_QUOTES, 'UTF-8');
-        $clean_desc = trim(preg_replace('/\s+/', ' ', $clean_desc));
-        if (\core_text::strlen($clean_desc) > 300) {
-            $clean_desc = \core_text::substr($clean_desc, 0, 297) . '...';
+        $text = '';
+        if ((string)$data->type === 'created') {
+            if (isset($data->trackedtime)) {
+                $snapshot->trackedtime = (int)$data->trackedtime;
+            }
+            $text = group_message_formatter::format_created($snapshot);
+        } else if ((string)$data->type === 'schedule_updated') {
+            if (isset($data->newtrackedtime)) {
+                $snapshot->trackedtime = (int)$data->newtrackedtime;
+            }
+            $text = group_message_formatter::format_schedule_update(
+                $snapshot,
+                (int)($data->oldtrackedtime ?? 0)
+            );
+        } else if ((string)$data->type === 'reminder') {
+            if (!isset($data->trackedtime) || (int)$data->trackedtime !== (int)$snapshot->trackedtime) {
+                return;
+            }
+            $text = group_message_formatter::format_reminder(
+                $snapshot,
+                (string)($data->remindercode ?? '')
+            );
         }
 
-        $deadline = $deadline_ts > 0 ? userdate($deadline_ts) : 'No deadline';
-        $modlabel = ($modname === 'assign') ? 'Assignment' : 'Quiz';
-
-        $text = "*{$icon} New {$modlabel} Created!* \n\n";
-        $text .= "*Course:* {$course->shortname}\n";
-        $text .= "*Title:* {$title}\n";
-        
-        if (!empty($clean_desc)) {
-            $text .= "*Description:* {$clean_desc}\n";
+        if ($text === '') {
+            return;
         }
-        
-        $text .= "*Deadline:* {$deadline}\n\n";
-        $text .= "🔗 *Link:* {$urlstring}";
 
-        $sender = new sender_session_service();
-        $idempotency = 'module-' . $cmid . '-' . $groupjid;
+        $idempotency = 'group-course-' . hash('sha256', json_encode([
+            'courseid' => (int)$data->courseid,
+            'cmid' => (int)$data->cmid,
+            'modname' => (string)$data->modname,
+            'type' => (string)$data->type,
+            'trackedtime' => (int)($data->trackedtime ?? $snapshot->trackedtime),
+            'oldtrackedtime' => (int)($data->oldtrackedtime ?? 0),
+            'newtrackedtime' => (int)($data->newtrackedtime ?? 0),
+            'remindercode' => (string)($data->remindercode ?? ''),
+        ]));
 
-        // 4. Try sending interactive button message first.
-        try {
-            $btn_desc = "*Course:* {$course->shortname}\n*Title:* {$title}";
-            if (!empty($clean_desc)) {
-                $btn_desc .= "\n*Description:* {$clean_desc}";
-            }
-            $btn_desc .= "\n*Deadline:* {$deadline}";
+        (new sender_session_service())->send_text((string)$group->groupjid, $text, $idempotency);
 
-            $sender->send_buttons($groupjid, [
-                'title' => "{$icon} New {$modlabel} Created!",
-                'description' => $btn_desc . "\n\n🔗 *Link:* {$urlstring}",
-                'footer' => 'Moodle Update',
-                'buttons' => [
-                    [
-                        'id' => "ack-{$cmid}",
-                        'displayText' => "Acknowledge"
-                    ]
-                ]
-            ], $idempotency . '-btn');
-        } catch (\Throwable $exception) {
-            // Fallback to text message
-            try {
-                $sender->send_text($groupjid, $text, $idempotency . '-txt');
-            } catch (\Throwable $fallback_exception) {
-                debugging("Failed to send {$modname} notification: " . $fallback_exception->getMessage(), DEBUG_DEVELOPER);
-                throw $fallback_exception;
-            }
+        if ((string)$data->type === 'created') {
+            $service->suppress_active_reminders((int)$data->cmid, (string)$data->modname, (int)$snapshot->trackedtime);
         }
     }
 }

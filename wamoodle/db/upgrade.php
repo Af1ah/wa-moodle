@@ -91,5 +91,38 @@ function xmldb_message_wamoodle_upgrade(int $oldversion): bool {
         upgrade_plugin_savepoint(true, 2026040301, 'message', 'wamoodle');
     }
 
+    if ($oldversion < 2026041800) {
+        \message_wamoodle\local\default_preferences_manager::sync_site_defaults();
+        upgrade_plugin_savepoint(true, 2026041800, 'message', 'wamoodle');
+    }
+
+    if ($oldversion < 2026041801) {
+        $table = new xmldb_table('message_wamoodle_group_schedule');
+        if (!$dbman->table_exists($table)) {
+            $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+            $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('cmid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('modname', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, '');
+            $table->add_field('trackedtime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('assign7dsent', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('assign24hsent', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('quiz3hsent', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+            $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+            $table->add_index('cmid_uix', XMLDB_INDEX_UNIQUE, ['cmid']);
+            $table->add_index('courseid_idx', XMLDB_INDEX_NOTUNIQUE, ['courseid']);
+
+            $dbman->create_table($table);
+        }
+
+        upgrade_plugin_savepoint(true, 2026041801, 'message', 'wamoodle');
+    }
+
+    if ($oldversion < 2026041802) {
+        upgrade_plugin_savepoint(true, 2026041802, 'message', 'wamoodle');
+    }
+
     return true;
 }

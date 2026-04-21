@@ -21,4 +21,8 @@ $observers = [
         'eventname'   => '\core\event\course_module_created',
         'callback'    => '\message_wamoodle\observer::course_module_created',
     ],
+    [
+        'eventname'   => '\core\event\course_module_updated',
+        'callback'    => '\message_wamoodle\observer::course_module_updated',
+    ],
 ];

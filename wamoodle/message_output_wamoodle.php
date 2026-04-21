@@ -10,11 +10,11 @@ use message_wamoodle\local\task_scheduler;
 
 class message_output_wamoodle extends message_output {
     public function is_system_configured(): bool {
-        return config::is_configured();
+        return config::is_configured() && config::is_personal_notifications_enabled();
     }
 
     public function send_message($eventdata): bool {
-        if (!config::is_enabled()) {
+        if (!config::is_enabled() || !config::is_personal_notifications_enabled()) {
             return true;
         }
 
@@ -33,6 +33,10 @@ class message_output_wamoodle extends message_output {
     }
 
     public function get_default_messaging_settings() {
+        if (!config::is_personal_notifications_enabled()) {
+            return MESSAGE_DISALLOWED;
+        }
+
         return MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED;
     }
 

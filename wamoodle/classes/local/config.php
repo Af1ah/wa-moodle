@@ -8,11 +8,12 @@ final class config {
     public const DEFAULT_PLUGIN_CODE = 'message_wamoodle';
 
     public static function is_enabled(): bool {
-        return (bool)get_config('message_wamoodle', 'enable');
+        return true;
     }
 
     public static function get_backend_url(): string {
-        return 'https://plugbolt.vercel.app';
+        $url = trim((string)get_config('message_wamoodle', 'plugbolt_base_url'));
+        return $url !== '' ? $url : 'https://plugbolt.vercel.app';
     }
 
     public static function get_plugin_code(): string {
@@ -20,16 +21,35 @@ final class config {
     }
 
     public static function get_api_key(): string {
+        $clientkey = self::get_client_key();
+        $pluginsecret = self::get_plugin_secret();
+
+        if ($clientkey !== '' || $pluginsecret !== '') {
+            return $clientkey . '|' . $pluginsecret;
+        }
+
         return trim((string)get_config('message_wamoodle', 'plugbolt_api_key'));
     }
 
     public static function get_client_key(): string {
-        $parts = explode('|', self::get_api_key(), 2);
+        $clientkey = trim((string)get_config('message_wamoodle', 'plugbolt_client_key'));
+        if ($clientkey !== '') {
+            return $clientkey;
+        }
+
+        $legacykey = trim((string)get_config('message_wamoodle', 'plugbolt_api_key'));
+        $parts = explode('|', $legacykey, 2);
         return $parts[0] ?? '';
     }
 
     public static function get_plugin_secret(): string {
-        $parts = explode('|', self::get_api_key(), 2);
+        $pluginsecret = trim((string)get_config('message_wamoodle', 'plugbolt_plugin_secret'));
+        if ($pluginsecret !== '') {
+            return $pluginsecret;
+        }
+
+        $legacykey = trim((string)get_config('message_wamoodle', 'plugbolt_api_key'));
+        $parts = explode('|', $legacykey, 2);
         return $parts[1] ?? '';
     }
 
@@ -46,10 +66,14 @@ final class config {
         return $field !== '' ? $field : 'phone2';
     }
 
+    public static function is_personal_notifications_enabled(): bool {
+        $value = get_config('message_wamoodle', 'enablepersonalnotifications');
+        return $value === false ? true : (bool)$value;
+    }
+
     public static function is_configured(): bool {
         $key = self::get_api_key();
-        return self::is_enabled()
-            && str_contains($key, '|')
+        return str_contains($key, '|')
             && self::get_client_key() !== ''
             && self::get_plugin_secret() !== '';
     }

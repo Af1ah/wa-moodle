@@ -14,4 +14,10 @@ final class task_scheduler {
 
         \core\task\manager::queue_adhoc_task($task);
     }
+
+    public static function queue_group_course_notification(array $customdata): void {
+        $task = new \message_wamoodle\task\course_module_notification_task();
+        $task->set_custom_data($customdata);
+        \core\task\manager::queue_adhoc_task($task);
+    }
 }

@@ -20,7 +20,9 @@ final class default_preferences_manager {
                 $current = array_values(array_unique(array_filter(explode(',', (string)$defaults->{$preference}))));
             }
 
-            $enabled = notification_policy::is_supported($component, $name);
+            $enabled = config::is_enabled()
+                && config::is_personal_notifications_enabled()
+                && notification_policy::is_supported($component, $name);
             $haswamoodle = in_array('wamoodle', $current, true);
 
             if ($enabled && !$haswamoodle) {

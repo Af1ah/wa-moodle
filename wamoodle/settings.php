@@ -2,12 +2,15 @@
 defined('MOODLE_INTERNAL') || die();
 
 if ($ADMIN->fulltree) {
-    $settings->add(new admin_setting_configcheckbox(
-        'message_wamoodle/enable',
-        get_string('enable', 'message_wamoodle'),
-        get_string('enable_desc', 'message_wamoodle'),
-        0
-    ));
+    $personalnotificationssetting = new admin_setting_configcheckbox(
+        'message_wamoodle/enablepersonalnotifications',
+        get_string('enablepersonalnotifications', 'message_wamoodle'),
+        get_string('enablepersonalnotifications_desc', 'message_wamoodle'),
+        1
+    );
+    $personalnotificationssetting->set_updatedcallback('message_wamoodle_admin_settings_updated');
+    $settings->add($personalnotificationssetting);
+
     $settings->add(new admin_setting_configpasswordunmask(
         'message_wamoodle/plugbolt_api_key',
         get_string('plugbolt_api_key', 'message_wamoodle'),

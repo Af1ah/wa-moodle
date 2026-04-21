@@ -22,3 +22,12 @@ function message_wamoodle_extend_navigation_course($navigation, $course, $contex
         $node->showinflatnavigation = true;
     }
 }
+
+/**
+ * Refresh site-level messaging defaults after admin setting changes.
+ */
+function message_wamoodle_admin_settings_updated(): void {
+    require_once(__DIR__ . '/classes/local/default_preferences_manager.php');
+
+    \message_wamoodle\local\default_preferences_manager::sync_site_defaults();
+}

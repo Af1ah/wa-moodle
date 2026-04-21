@@ -5,29 +5,21 @@ defined('MOODLE_INTERNAL') || die();
 
 final class notification_policy {
     /**
-     * Default notifications (e.g. assignments, quizzes) that are enabled for
-     * WhatsApp by default when the plugin settings are synchronized.
-     * This no longer restricts what can be sent; Moodle preferences handle UI logic.
+     * Default personal notifications enabled for WhatsApp when the admin sync runs.
+     * Users can still change their own preferences in Moodle.
      */
     private const ALLOWED_PROVIDERS = [
-        'mod_assign' => ['*'],
-        'mod_feedback' => ['*'],
-        'mod_forum' => ['*'],
-        'mod_lesson' => ['*'],
-        'mod_quiz' => ['*'],
-        'enrol_manual' => ['expiry_notification'],
-        'enrol_self' => ['expiry_notification'],
+        'mod_assign' => ['assign_overdue'],
+        'mod_quiz' => [
+            'attempt_grading_complete',
+            'attempt_overdue',
+            'confirmation',
+        ],
         'moodle' => [
             'badgerecipientnotice',
             'badgecreatornotice',
-            'competencyplancomment',
-            'competencyusercompcomment',
             'coursecompleted',
-            'coursecontentupdated',
-            'enrolcoursewelcomemessage',
             'gradenotifications',
-            'insights',
-            'newlogin',
         ],
     ];
 
